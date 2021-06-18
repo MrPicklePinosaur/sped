@@ -1,3 +1,5 @@
+CC=gcc
+CFLAGS=-m32 -no-pie -g
 
 .PHONY: clean
 
@@ -7,7 +9,7 @@ sped.o: sped.asm
 	nasm -f elf32 $^ -o $@
 
 sped: sped.o
-	ld -m elf_i386 $^ -o $@
+	$(CC) $(CFLAGS) $^ -o $@
 
 clean:
 	rm sped *.o
