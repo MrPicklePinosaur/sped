@@ -6,6 +6,7 @@ extern free
 extern memset
 
 global readFile
+global readLine
 
 section .data
     wrongfile_str db `unable to open file, error code: %i\n`, 0x00
@@ -65,8 +66,8 @@ readFile:
     mov esi, eax
     mov [ebp-IS_EOF], ebx
     
-    push esi
-    call printf
+    ; push esi
+    ; call printf
 
     ; make string buffer bigger
     mov eax, DWORD [ebp-LINES_READ]
@@ -113,6 +114,7 @@ readFile:
 ; return:
 ;   eax: location to buffer
 ;   ebx: contains eof
+;   ecx: number of chars read
 readLine:
     %define _FILE_HANDLE 8
     %define CHAR_COUNT   4   ; count number of characters read
@@ -177,6 +179,12 @@ readLine:
     jmp _readLine_loop
 
     _readLine_exit:
+
+    mov eax, [ebp-BLOCK_COUNT]
+    mov ecx, 63
+    mul ecx
+    add eax, [ebp-CHAR_COUNT]
+    mov ecx,eax
 
     mov eax, DWORD [ebp-STR_PTR]
 
