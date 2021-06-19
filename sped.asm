@@ -3,6 +3,10 @@
 
 global main
 extern printf
+extern malloc
+extern realloc
+extern free
+extern memset
 
 ; macros
 %macro write_str 2
@@ -21,9 +25,6 @@ section .data
     wrongfile_str db `unable to open file, error code: %i\n`, 0x00
     char_str db `read this char: %i\n`, 0x00
     printfint_str db `int: %i\n`, 0x00
-
-section .bss
-    read_buf resb 64
 
 section .text
 main:
@@ -101,6 +102,9 @@ readFile:
     push DWORD [ebp-FILE_HANDLE]
     call readLine 
 
+    push eax
+    call printf
+
     jmp _readFile_exit
 
     _readFile_exit:
@@ -120,21 +124,33 @@ readFile:
 ; reads a line until newline character is reached
 ; args: file_handle
 ; return:
-;   location to buffer
-;   contains eof
+;   eax: location to buffer
+;   ebx: contains eof
 readLine:
     %define _FILE_HANDLE 8
-    %define CHAR_PTR 4
+    %define CHAR_COUNT   4   ; count number of characters read
+    %define BLOCK_COUNT  8   ; number of 64 blocks we've read
+    %define STR_PTR      12  ; malloced buffer to store read string
 
     push ebp
     mov ebp, esp
+    
+    ; allocate vars
+    sub esp, 8
+    mov DWORD [ebp-CHAR_COUNT], 0x00
+    mov DWORD [ebp-BLOCK_COUNT], 0x00
 
-    sub esp, 4
-    mov DWORD [ebp-CHAR_PTR], 0x00
+    push 64
+    call malloc
+    mov [ebp-STR_PTR], eax
+
+    push DWORD [ebp-STR_PTR]
+    push 0x00
+    push 64
 
     _readLine_loop:
     ; if buffer is full
-    cmp BYTE [ebp-CHAR_PTR], 64
+    cmp BYTE [ebp-CHAR_COUNT], 63 ; leave one byte for null byte
     jne _readLine_notfull
     jmp _readLine_exit
 
@@ -142,38 +158,47 @@ readLine:
     ; read a single character
     mov eax, 3
     mov ebx, [ebp+_FILE_HANDLE]
-    mov ecx, read_buf
-    add ecx, [ebp-CHAR_PTR]
+    mov ecx, [ebp-STR_PTR]
+    add ecx, [ebp-CHAR_COUNT]
     mov edx, 1
     int 0x80
 
-    mov eax, 4
-    mov ebx, 1
-    mov ecx, read_buf
-    add ecx, [ebp-CHAR_PTR]
-    mov edx, 1
-    int 0x80
+    ; mov eax, 4
+    ; mov ebx, 1
+    ; mov ecx, [ebp-STR_PTR]
+    ; add ecx, [ebp-CHAR_COUNT]
+    ; mov edx, 1
+    ; int 0x80
 
     ; check for newline
-    mov eax, read_buf
-    add eax, [ebp-CHAR_PTR]
+    mov eax, [ebp-STR_PTR]
+    add eax, [ebp-CHAR_COUNT]
     cmp DWORD [eax], 0x0a
-    je _readLine_exit
+    jne _readLine_not_newline
+    mov ebx, 0
+    jmp _readLine_exit
+    _readLine_not_newline:
     
     ; check for eof
-    mov eax, read_buf
-    add eax, [ebp-CHAR_PTR]
+    mov eax, [ebp-STR_PTR]
+    add eax, [ebp-CHAR_COUNT]
     cmp DWORD [eax], 0x05
-    je _readLine_exit
+    jne _readLine_not_eof
+    mov ebx, 1
+    jmp _readLine_exit 
+    _readLine_not_eof:
 
-    add DWORD [ebp-CHAR_PTR], 1
-
+    add DWORD [ebp-CHAR_COUNT], 1
     jmp _readLine_loop
 
     _readLine_exit:
 
+    mov eax, DWORD [ebp-STR_PTR]
+
     %undef _FILE_HANDLE
-    %undef CHAR_PTR
+    %undef CHAR_COUNT
+    %undef BLOCK_COUNT 
+    %undef STR_PTR
 
     mov esp, ebp
     pop ebp
