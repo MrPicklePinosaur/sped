@@ -4,5 +4,6 @@
 
 extern readFile
 extern readLine
+extern writeFile
 
 %endif

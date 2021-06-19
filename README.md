@@ -11,7 +11,7 @@ This is my own stupid and pointless attempt at writing such line editor.
 
 #### Build from source
 
-With `gcc` and `nasm` installed, you can simply run
+with `gcc` and `nasm` installed, you can simply run
 ```
 make
 ```

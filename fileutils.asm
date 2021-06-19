@@ -1,12 +1,16 @@
 
+; %include "utils.S"
+
 extern printf
 extern malloc
 extern realloc
 extern free
 extern memset
+extern strlen
 
 global readFile
 global readLine
+global writeFile
 
 section .data
     wrongfile_str db `unable to open file, error code: %i\n`, 0x00
@@ -202,6 +206,75 @@ readLine:
     ret
 
 ; writes contents of string array into file
-; arg: filename, string array
-; writeFile:
+; arg: filename, string array, number of lines
+writeFile:
+
+    %define _FILE_NAME    16
+    %define _STR_ARR      12
+    %define _STR_ARR_LEN  8
+    %define FILE_HANDLE   4
+    %define LINES_WRITTEN 8
+
+    push ebp
+    mov ebp, esp
+
+    ; allocate vars
+    sub esp, 8
+    mov DWORD [ebp-FILE_HANDLE], 0x00
+    mov DWORD [ebp-LINES_WRITTEN], 0x00
+
+    ; open existing file
+    mov eax, 5
+    mov ebx, [ebp+_FILE_NAME]
+    mov ecx, 2
+    mov edx, 0777
+    int 0x80
+    mov [ebp-FILE_HANDLE], eax
+
+    ; check if file was open successfully
+    cmp eax, 0
+    jge _writeFile_loop
+    push eax
+    push wrongfile_str
+    call printf
+    jmp _writeFile_exit
+    
+    _writeFile_loop:
+
+    ; check if we are done writing
+    mov eax, [ebp+_STR_ARR_LEN]
+    cmp eax, [ebp-LINES_WRITTEN]
+    je _writeFile_exit
+
+    ; get length of string to write
+    str_offset [ebp+_STR_ARR], [ebp-LINES_WRITTEN]
+    mov esi, eax
+    push DWORD [esi]
+    call strlen
+
+    mov edx, eax
+    mov eax, 4
+    mov ebx, [ebp-FILE_HANDLE]    
+    mov ecx, [esi]
+    int 0x80
+
+    add DWORD [ebp-LINES_WRITTEN], 1
+
+    jmp _writeFile_loop
+
+    _writeFile_exit:
+
+    ; close file
+    mov eax, 6
+    mov ebx, [ebp-FILE_HANDLE]
+    int 0x80
+    
+    %undef _FILE_NAME
+    %undef _STR_ARR
+    %undef _STR_ARR_LEN
+    %undef FILE_HANDLE
+    
+    mov esp, ebp
+    pop ebp
+    ret
 

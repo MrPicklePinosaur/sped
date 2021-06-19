@@ -33,6 +33,7 @@ section .data
 section .bss
     buffer resb 4
     buffer_lines resb 4
+    buffer_filename resb 4
     cur_line resb 4
 
 section .text
@@ -57,7 +58,10 @@ main:
     _main_existing:
     mov ebx, DWORD [ebp+_ARGV]
     add ebx, 4 ; first user arg is filename
-    push DWORD [ebx]
+    mov ebx, [ebx]
+    mov [buffer_filename], ebx
+
+    push DWORD [buffer_filename]
     call readFile
 
     mov [buffer], eax
@@ -234,6 +238,19 @@ repl:
 
     jmp _repl_continue
     _repl_cmd_change_end:
+
+    ; w writes file =-=-=-=-=-=-=-=-=-=-=-=-=
+    mov eax, DWORD [ebp-CMDSTR]
+    cmp BYTE [eax], 'w'
+    jne _repl_cmd_write_end
+
+    push DWORD [buffer_filename]
+    push DWORD [buffer]
+    push DWORD [buffer_lines]
+    call writeFile
+
+    jmp _repl_continue
+    _repl_cmd_write_end:
 
 
     jmp _repl_invalid_cmd
