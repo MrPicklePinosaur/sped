@@ -201,3 +201,7 @@ readLine:
     pop ebp
     ret
 
+; writes contents of string array into file
+; arg: filename, string array
+; writeFile:
+

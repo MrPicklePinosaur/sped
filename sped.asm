@@ -3,10 +3,12 @@
 
 %include "fileutils.S"
 
-global main
 extern printf
 extern fflush
 extern stdout
+extern free
+
+global main
 
 ; macros
 %macro write_str 2
@@ -72,6 +74,10 @@ main:
     jmp _main_exit
 
     _main_exit:
+
+    ; free string array
+
+
     %undef _ARGC
     %undef _ARGV
 
@@ -112,14 +118,14 @@ repl:
     mov eax, DWORD [ebp-CMDSTR]
     mov eax, [eax]
 
-    ; q exists program
+    ; q exists program =-=-=-=-=-=-=-=-=-=-=-=-=
     mov eax, DWORD [ebp-CMDSTR]
     cmp BYTE [eax], 'q'
     jne _repl_cmd_quit_end
     jmp _repl_exit
     _repl_cmd_quit_end:
 
-    ; p prints current line
+    ; p prints current line =-=-=-=-=-=-=-=-=-=-=
     mov eax, DWORD [ebp-CMDSTR]
     cmp BYTE [eax], 'p'
     jne _repl_cmd_print_end
@@ -134,7 +140,7 @@ repl:
     jmp _repl_continue
     _repl_cmd_print_end:
 
-    ; n prints the current line number
+    ; n prints the current line number =-=-=-=-=-=-=-=
     mov eax, DWORD [ebp-CMDSTR]
     cmp BYTE [eax], 'n'
     jne _repl_cmd_number_end
@@ -146,7 +152,7 @@ repl:
     jmp _repl_continue
     _repl_cmd_number_end:
 
-    ; - goes to prev line
+    ; - goes to prev line =-=-=-=-=-=-=-=-=-=-=-=-=
     mov eax, DWORD [ebp-CMDSTR]
     cmp BYTE [eax], '-'
     jne _repl_cmd_decline_end
@@ -162,7 +168,7 @@ repl:
     jmp _repl_continue
     _repl_cmd_decline_end:
 
-    ; + goes to next line
+    ; + goes to next line =-=-=-=-=-=-=-=-=-=-=-=-=
     mov eax, DWORD [ebp-CMDSTR]
     cmp BYTE [eax], '+'
     jne _repl_cmd_incline_end
@@ -177,6 +183,57 @@ repl:
 
     jmp _repl_continue
     _repl_cmd_incline_end:
+
+    ; g goes to first line =-=-=-=-=-=-=-=-=-=-=-=-=
+    mov eax, DWORD [ebp-CMDSTR]
+    cmp BYTE [eax], 'g'
+    jne _repl_cmd_jumptop_end
+
+    mov DWORD [cur_line], 0x00
+
+    jmp _repl_continue
+    _repl_cmd_jumptop_end:
+
+    ; G goes to last line =-=-=-=-=-=-=-=-=-=-=-=-=
+    mov eax, DWORD [ebp-CMDSTR]
+    cmp BYTE [eax], 'G'
+    jne _repl_cmd_jumpbot_end
+
+    mov eax, DWORD [buffer_lines]
+    sub eax, 1
+    mov DWORD [cur_line], eax
+
+    jmp _repl_continue
+    _repl_cmd_jumpbot_end:
+
+    ; c changes the current line =-=-=-=-=-=-=-=-=-=
+    mov eax, DWORD [ebp-CMDSTR]
+    cmp BYTE [eax], 'c'
+    jne _repl_cmd_change_end
+
+    ; read a new line to use
+    push 0
+    call readLine
+
+    mov esi, eax
+
+    ; free old string
+    mov eax, [cur_line]
+    mov ecx, 4
+    mul ecx
+    add eax, [buffer]
+    push DWORD [eax]
+    call free
+
+    ; insert new string
+    mov eax, [cur_line]
+    mov ecx, 4
+    mul ecx
+    add eax, DWORD [buffer]
+    mov [eax], esi
+
+    jmp _repl_continue
+    _repl_cmd_change_end:
 
 
     jmp _repl_invalid_cmd
