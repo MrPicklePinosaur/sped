@@ -20,9 +20,13 @@ extern stdout
 section .data
     banner_str db `SPED - the stupidly pointless editor\n`, 0x00
     nofile_str db `no file provided\n`, 0x00
+    readlines_str db `opened file with %i lines\n`, 0x00
     prompt_str db `sped > `, 0x00
-    invalidcommand_str db `invalid command\n`, 0x00
+    invalidcmd_str db `invalid command\n`, 0x00
+    invalidaddr_str db `invalid address\n`, 0x00
     charcount_str db `read %i chars\n`, 0x00
+    currentline_str db `current line: %i\n`, 0x00
+    echo_str db `%s`, 0x00 ; print strings without format exploit
 
 section .bss
     buffer resb 4
@@ -55,8 +59,12 @@ main:
     call readFile
 
     mov [buffer], eax
-    mov [buffer_lines], ebx
+    mov [buffer_lines], ecx
     mov DWORD [cur_line], 0x00
+
+    push DWORD [buffer_lines]
+    push readlines_str
+    call printf
 
     call repl
 
@@ -98,7 +106,7 @@ repl:
 
     ; commands are single char for now
     cmp ecx, 1 
-    jne _repl_invalid
+    jne _repl_invalid_cmd
 
     ; parse commands
     mov eax, DWORD [ebp-CMDSTR]
@@ -111,10 +119,78 @@ repl:
     jmp _repl_exit
     _repl_cmd_quit_end:
 
+    ; p prints current line
+    mov eax, DWORD [ebp-CMDSTR]
+    cmp BYTE [eax], 'p'
+    jne _repl_cmd_print_end
 
-    _repl_invalid:
-    push invalidcommand_str
+    mov eax, DWORD [cur_line]
+    mov ecx, 4
+    mul ecx
+    add eax, [buffer]
+    push DWORD [eax]
+    push echo_str
     call printf
+    jmp _repl_continue
+    _repl_cmd_print_end:
+
+    ; n prints the current line number
+    mov eax, DWORD [ebp-CMDSTR]
+    cmp BYTE [eax], 'n'
+    jne _repl_cmd_number_end
+
+    push DWORD [cur_line]
+    push currentline_str
+    call printf
+
+    jmp _repl_continue
+    _repl_cmd_number_end:
+
+    ; - goes to prev line
+    mov eax, DWORD [ebp-CMDSTR]
+    cmp BYTE [eax], '-'
+    jne _repl_cmd_decline_end
+
+    ; make sure we are within bounds
+    mov eax, DWORD [cur_line] 
+    sub eax, 1
+    cmp eax, 0
+    jl _repl_invalid_addr
+    
+    sub DWORD [cur_line], 1
+
+    jmp _repl_continue
+    _repl_cmd_decline_end:
+
+    ; + goes to next line
+    mov eax, DWORD [ebp-CMDSTR]
+    cmp BYTE [eax], '+'
+    jne _repl_cmd_incline_end
+
+    ; make sure we are within bounds 
+    mov eax, DWORD [cur_line] 
+    add eax, 1
+    cmp eax, [buffer_lines]
+    jge _repl_invalid_addr
+    
+    add DWORD [cur_line], 1
+
+    jmp _repl_continue
+    _repl_cmd_incline_end:
+
+
+    jmp _repl_invalid_cmd
+
+    ; some error messages
+    _repl_invalid_cmd:
+    push invalidcmd_str
+    call printf
+    jmp _repl_continue
+
+    _repl_invalid_addr:
+    push invalidaddr_str
+    call printf
+    jmp _repl_continue
 
     _repl_continue:
     jmp _repl_loop

@@ -80,10 +80,14 @@ readFile:
     mov DWORD [ebp-BUF_PTR], eax
 
     ; write string to buffer
-    mov eax, DWORD [ebp-BUF_PTR]
+    mov eax, [ebp-LINES_READ]
     mov ecx, 4
     mul ecx
-    mov eax, esi
+    add eax, DWORD [ebp-BUF_PTR]
+    mov [eax], esi
+
+    ; push DWORD [eax]
+    ; call printf
 
     add DWORD [ebp-LINES_READ], 1
 
