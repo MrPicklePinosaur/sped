@@ -3,10 +3,6 @@
 **sped** is a line editor written in x86 assembly. Back in the day, before visual editors, line editors like **ed** were used.
 This is my own stupid and pointless attempt at writing such line editor.
 
-### FEATURES/NON-FEATURES
-
-
-
 ### INSTALLATION
 
 #### Build from source
@@ -29,11 +25,19 @@ to build the project
 
 **c** - change the contents of the current line
 
+**o/O** - insert line after/before current line
+
+**d** - delete current line
+
 **w** - saves file
 
 **q** - exists the program
 
 ### FAQ
+
+**what is the point of this**
+
+obviously, we live in a day and age where we have the comfort of visual editors, so line editors like these have become obsolete. i simply wanted to work on a relatively easy to implement project so i can learn some assembly.
 
 **are you insane**
 

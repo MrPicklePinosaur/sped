@@ -15,6 +15,7 @@ section .data
     prompt_str db `sped > `, 0x00
     invalidcmd_str db `invalid command\n`, 0x00
     invalidaddr_str db `invalid address\n`, 0x00
+    oneline_str db `cannot delete line, as there is only one line\n`, 0x00
     charcount_str db `read %i chars\n`, 0x00
     currentline_str db `current line: %i\n`, 0x00
     echo_str db `%s`, 0x00 ; print strings without format exploit
@@ -195,6 +196,8 @@ repl:
     jne _repl_cmd_delete_end
     
     ; check to make sure we don't have only one line
+    cmp DWORD [buffer_lines], 1
+    jle _repl_oneline
 
     ; delete the line
     push DWORD [buffer]
@@ -205,12 +208,50 @@ repl:
 
     sub DWORD [buffer_lines], 1
 
+    ; if it's the last line, move one down
+    mov eax, DWORD [buffer_lines]
+    cmp DWORD [cur_line], eax
+    jl _repl_continue
+    sub DWORD [cur_line], 1
+
     jmp _repl_continue
     _repl_cmd_delete_end:
 
     ; o appends text after line =-=-=-=-=-=-=-=-=
     mov eax, DWORD [ebp-CMDSTR]
     cmp BYTE [eax], 'o'
+    jne _repl_cmd_appenddown_end
+
+    ; make room first
+    push DWORD [buffer]
+    push DWORD [buffer_lines]
+    mov eax, DWORD [cur_line]
+    add eax, 1
+    push eax
+    call shiftRight
+    mov [buffer], eax
+
+    ; input text
+    push 0
+    call readLine
+    mov esi, eax
+
+    ; insert new string
+    mov eax, [cur_line]
+    add eax, 1
+    mov ecx, 4
+    mul ecx
+    add eax, DWORD [buffer]
+    mov [eax], esi
+
+    add DWORD [buffer_lines], 1
+
+    jmp _repl_continue
+    _repl_cmd_appenddown_end:
+
+    ; O oppens text before line =-=-=-=-=-=-=-=
+    mov eax, DWORD [ebp-CMDSTR]
+    cmp BYTE [eax], 'O'
     jne _repl_cmd_appendup_end
 
     ; make room first
@@ -231,11 +272,15 @@ repl:
     mul ecx
     add eax, DWORD [buffer]
     mov [eax], esi
+    
+    ; also move cursor down one
+    add DWORD [cur_line], 1
 
     add DWORD [buffer_lines], 1
 
     jmp _repl_continue
     _repl_cmd_appendup_end:
+
 
     ; w writes file =-=-=-=-=-=-=-=-=-=-=-=-=
     mov eax, DWORD [ebp-CMDSTR]
@@ -262,6 +307,11 @@ repl:
 
     _repl_invalid_addr:
     push invalidaddr_str
+    call printf
+    jmp _repl_continue
+
+    _repl_oneline:
+    push oneline_str
     call printf
     jmp _repl_continue
 
