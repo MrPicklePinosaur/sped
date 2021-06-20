@@ -1,5 +1,5 @@
 
-; %include "utils.S"
+%include "utils.S"
 
 extern printf
 extern malloc

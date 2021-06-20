@@ -29,6 +29,10 @@ to build the project
 
 **c** - change the contents of the current line
 
+**w** - saves file
+
+**q** - exists the program
+
 ### FAQ
 
 **are you insane**
