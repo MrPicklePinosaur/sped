@@ -14,6 +14,7 @@ global writeFile
 
 section .data
     wrongfile_str db `unable to open file, error code: %i\n`, 0x00
+    returnvalue_str db `system call return was %i\n`, 0x00
 
 section .text
 
@@ -62,13 +63,13 @@ readFile:
 
     push DWORD [ebp-FILE_HANDLE]
     call readLine 
-
     mov esi, eax
     mov [ebp-IS_EOF], ebx
 
     ; check if eof was reached
     cmp DWORD [ebp-IS_EOF], 1
     je _readFile_exit
+
     
     ; push esi
     ; call printf
@@ -233,11 +234,13 @@ writeFile:
 
     ; check if file was open successfully
     cmp eax, 0
-    jge _writeFile_loop
-    push eax
-    push wrongfile_str
-    call printf
-    jmp _writeFile_exit
+    jl _writeFile_error
+
+    ; truncate file
+    mov eax, 93
+    mov ebx, [ebp-FILE_HANDLE]
+    mov ecx, 1
+    int 0x80
     
     _writeFile_loop:
 
@@ -261,6 +264,12 @@ writeFile:
     add DWORD [ebp-LINES_WRITTEN], 1
 
     jmp _writeFile_loop
+
+    _writeFile_error:
+    push eax
+    push wrongfile_str
+    call printf
+    jmp _writeFile_exit
 
     _writeFile_exit:
 

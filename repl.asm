@@ -201,11 +201,41 @@ repl:
     push DWORD [buffer_lines]
     push DWORD [cur_line]
     call shiftLeft
+    mov [buffer], eax
 
     sub DWORD [buffer_lines], 1
 
     jmp _repl_continue
     _repl_cmd_delete_end:
+
+    ; o appends text after line =-=-=-=-=-=-=-=-=
+    mov eax, DWORD [ebp-CMDSTR]
+    cmp BYTE [eax], 'o'
+    jne _repl_cmd_appendup_end
+
+    ; make room first
+    push DWORD [buffer]
+    push DWORD [buffer_lines]
+    push DWORD [cur_line]
+    call shiftRight
+    mov [buffer], eax
+
+    ; input text
+    push 0
+    call readLine
+    mov esi, eax
+
+    ; insert new string
+    mov eax, [cur_line]
+    mov ecx, 4
+    mul ecx
+    add eax, DWORD [buffer]
+    mov [eax], esi
+
+    add DWORD [buffer_lines], 1
+
+    jmp _repl_continue
+    _repl_cmd_appendup_end:
 
     ; w writes file =-=-=-=-=-=-=-=-=-=-=-=-=
     mov eax, DWORD [ebp-CMDSTR]
