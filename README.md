@@ -9,11 +9,16 @@ This is my own stupid and pointless attempt at writing such line editor.
 
 with `gcc` and `nasm` installed, you can simply run
 ```
-make
+sudo make install
 ```
 to build the project
 
-### COMMANDS
+### USAGE/COMMANDS
+
+**sped** takes a single command line argument, the file you wish to open.
+```
+sped [file]
+```
 
 **p** - prints the contents of the current line
 

@@ -1,4 +1,6 @@
 ; sped - the stupidly pointless editor
+; written by pinosaur
+; sped.asm: main file
 
 %include "macros.S"
 
@@ -11,8 +13,8 @@ global main
 
 section .data
     banner_str db `SPED - the stupidly pointless editor\n`, 0x00
-    nofile_str db `no file provided\n`, 0x00
-    readlines_str db `opened file with %i lines\n`, 0x00
+    nofile_str db `no file provided.\n`, 0x00
+    readlines_str db `opened file with %i lines.\n`, 0x00
 
 section .text
 main:

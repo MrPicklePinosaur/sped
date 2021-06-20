@@ -1,3 +1,6 @@
+; sped - the stupidly pointless editor
+; written by pinosaur
+; repl.asm: user interactions
 
 extern printf
 extern fflush
@@ -13,10 +16,9 @@ global repl
 
 section .data
     prompt_str db `sped > `, 0x00
-    invalidcmd_str db `invalid command\n`, 0x00
-    invalidaddr_str db `invalid address\n`, 0x00
-    oneline_str db `cannot delete line, as there is only one line\n`, 0x00
-    charcount_str db `read %i chars\n`, 0x00
+    invalidcmd_str db `invalid command.\n`, 0x00
+    invalidaddr_str db `invalid address.\n`, 0x00
+    oneline_str db `cannot delete line, as there is only one line.\n`, 0x00
     currentline_str db `current line: %i\n`, 0x00
     echo_str db `%s`, 0x00 ; print strings without format exploit
 

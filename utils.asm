@@ -1,3 +1,6 @@
+; sped - the stupidly pointless editor
+; written by pinosaur
+; utils.asm: some buffer utilities
 
 %include "macros.S"
 

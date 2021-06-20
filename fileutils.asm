@@ -1,3 +1,6 @@
+; sped - the stupidly pointless editor
+; written by pinosaur
+; fileutils.asm: file i/o
 
 %include "macros.S"
 
@@ -69,10 +72,6 @@ readFile:
     ; check if eof was reached
     cmp DWORD [ebp-IS_EOF], 1
     je _readFile_exit
-
-    
-    ; push esi
-    ; call printf
 
     ; make string buffer bigger
     mov eax, DWORD [ebp-LINES_READ]
@@ -160,13 +159,6 @@ readLine:
     add ecx, [ebp-CHAR_COUNT]
     mov edx, 1
     int 0x80
-
-    ; mov eax, 4
-    ; mov ebx, 1
-    ; mov ecx, [ebp-STR_PTR]
-    ; add ecx, [ebp-CHAR_COUNT]
-    ; mov edx, 1
-    ; int 0x80
     
     ; check for eof
     cmp eax, 0 ; eax has zero on eof
