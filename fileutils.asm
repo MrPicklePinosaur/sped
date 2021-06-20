@@ -1,5 +1,5 @@
 
-%include "utils.S"
+%include "macros.S"
 
 extern printf
 extern malloc
@@ -60,15 +60,15 @@ readFile:
 
     _readFile_loop:
 
-    ; check if eof was reached
-    cmp DWORD [ebp-IS_EOF], 1
-    je _readFile_exit
-
     push DWORD [ebp-FILE_HANDLE]
     call readLine 
 
     mov esi, eax
     mov [ebp-IS_EOF], ebx
+
+    ; check if eof was reached
+    cmp DWORD [ebp-IS_EOF], 1
+    je _readFile_exit
     
     ; push esi
     ; call printf

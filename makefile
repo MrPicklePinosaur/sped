@@ -10,7 +10,7 @@ make: sped
 %.o: %.asm
 	$(ASM) $(ASMFLAGS) -o $@ $^
 
-sped: sped.o fileutils.o repl.o
+sped: sped.o fileutils.o repl.o utils.o
 	$(CC) $(CFLAGS) -o $@ $^
 
 clean:

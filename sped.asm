@@ -1,21 +1,13 @@
 ; sped - the stupidly pointless editor
-; written by pinosaur
 
-%include "fileutils.S"
-%include "repl.S"
+%include "macros.S"
 
 extern printf
 
-global main
+extern readFile
+extern repl
 
-; macros
-%macro write_str 2
-    mov eax, 4
-    mov ebx, 1
-    mov ecx, %1
-    mov edx, %2
-    int 0x80
-%endmacro
+global main
 
 section .data
     banner_str db `SPED - the stupidly pointless editor\n`, 0x00

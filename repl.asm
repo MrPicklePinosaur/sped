@@ -1,10 +1,13 @@
 
-%include "fileutils.S"
-
 extern printf
 extern fflush
 extern stdout
 extern free
+
+extern readLine
+extern writeFile
+extern shiftLeft
+extern shiftRight
 
 global repl
 
@@ -190,8 +193,16 @@ repl:
     mov eax, DWORD [ebp-CMDSTR]
     cmp BYTE [eax], 'd'
     jne _repl_cmd_delete_end
-
     
+    ; check to make sure we don't have only one line
+
+    ; delete the line
+    push DWORD [buffer]
+    push DWORD [buffer_lines]
+    push DWORD [cur_line]
+    call shiftLeft
+
+    sub DWORD [buffer_lines], 1
 
     jmp _repl_continue
     _repl_cmd_delete_end:
